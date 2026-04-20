@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model AttackerProfile {
+  id          String   @id @default(uuid())
+  fingerprint String   @unique // SHA-256 fingerprint representing the attacker
+  ip          String
+  country     String?
+  city        String?
+  latitude    Float?
+  longitude   Float?
+  organization String? // ISP or org
+  isProxy     Boolean  @default(false)
+  tags        String   // JSON string or comma separated tags (e.g., "Script Kiddie, Persistent")
+  sessions    AttackSession[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AttackSession {
+  id                 String   @id @default(uuid())
+  attackerId         String
+  attacker           AttackerProfile @relation(fields: [attackerId], references: [id])
+  startTime          DateTime @default(now())
+  endTime            DateTime?
+  totalWastedTimeSec Int      @default(0)
+  tarpitLevel        Int      @default(0) // Severity of tarpitting multiplier
+  payloads           Payload[]
+}
+
+model Payload {
+  id             String   @id @default(uuid())
+  sessionId      String
+  session        AttackSession @relation(fields: [sessionId], references: [id])
+  surface        String   // e.g., 'login', 'admin', 'api', 'ssh'
+  method         String   
+  endpoint       String
+  body           String?  // JSON stringified body
+  headers        String?  // JSON stringified headers
+  matchedRules   String   // JSON array of matched rule names (e.g. ['SQLi', 'XSS'])
+  threatScore    Int      @default(0)
+  severity       String   // Low, Medium, High, Critical
+  timestamp      DateTime @default(now())
+  aiInsight      AIInsight?
+}
+
+model AIInsight {
+  id             String   @id @default(uuid())
+  payloadId      String   @unique
+  payload        Payload  @relation(fields: [payloadId], references: [id])
+  payloadHash    String   @unique // Used to cache based on exact payload content/match rules to avoid redundant API calls
+  explanation    String   // Paragraph 1: What the attack is
+  intention      String   // Paragraph 2: What the attacker is attempting
+  danger         String   // Paragraph 3: How dangerous it would be on an unprotected system
+  recommendation String   // Paragraph 4: Code-level defense
+  createdAt      DateTime @default(now())
+}

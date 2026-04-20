@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #0A0A0F;
+    color: #F0F0F5;
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Space Grotesk", sans-serif;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #0D0D1A;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #1E1E3A;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #E63946;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+@layer components {
+    /* Base Elements */
+    .cyber-card {
+        background-color: #0D0D1A;
+        border: 1px solid #1E1E3A;
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 200ms ease;
+    }
+    
+    .cyber-card:hover {
+        border-color: #E63946;
+        box-shadow: 0 0 20px rgba(230,57,70,0.12);
+    }
+    
+    .cyber-input {
+        background-color: #0A0A0F;
+        border: 1px solid #1E1E3A;
+        border-radius: 8px;
+        padding: 12px;
+        color: #F0F0F5;
+        transition: all 200ms ease;
+    }
+    
+    .cyber-input::placeholder {
+        color: #444466;
+    }
+    
+    .cyber-input:focus {
+        outline: none;
+        border-color: #4361EE;
+        box-shadow: 0 0 20px rgba(67, 97, 238, 0.15);
+    }
+
+    /* Buttons */
+    .btn {
+        border-radius: 8px;
+        padding: 12px 24px;
+        transition: all 200ms ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-family: "Inter", sans-serif;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    
+    .btn-primary {
+        background-color: #E63946;
+        color: #FFFFFF;
+        border: 1px solid transparent;
+    }
+    
+    .btn-primary:hover {
+        background-color: #B5293A;
+    }
+    
+    .btn-secondary {
+        background-color: transparent;
+        border: 1px solid #4361EE;
+        color: #4361EE;
+    }
+    
+    .btn-secondary:hover {
+        background-color: rgba(67, 97, 238, 0.1);
+    }
+    
+    .btn-ghost {
+        background-color: transparent;
+        border: 1px solid #1E1E3A;
+        color: #8888AA;
+    }
+    
+    .btn-ghost:hover {
+        border-color: #F0F0F5;
+        color: #F0F0F5;
+    }
+
+    /* Typography */
+    .page-title {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+    }
+    
+    .section-header {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+    }
+    
+    .mono-data {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+    }
+    
+    .metric-num {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: 48px;
+        font-weight: 700;
+    }
+}
+
+@layer utilities {
+    .animate-entry {
+        animation: fadeSlideUp 400ms ease forwards;
+    }
+    
+    @keyframes fadeSlideUp {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+}
