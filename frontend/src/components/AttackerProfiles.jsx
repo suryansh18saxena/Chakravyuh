@@ -75,7 +75,7 @@ function ProfileCard({ session }) {
                 </div>
                 <div>
                    <p className="text-[10px] text-cyber-text-secondary uppercase tracking-widest mb-1">ISP / ASN</p>
-                   <p className="text-[12px] text-white truncate" title={attacker.isp}>{attacker.isp || 'Unknown'}</p>
+                   <p className="text-[12px] text-white truncate" title={attacker.organization}>{attacker.organization || 'Unknown'}</p>
                 </div>
             </div>
 

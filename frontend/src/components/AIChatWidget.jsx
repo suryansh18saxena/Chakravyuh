@@ -105,7 +105,7 @@ export default function AIChatWidget() {
                 </div>
                 <div>
                   <p className="font-heading font-bold text-white text-sm">Chakravyuh AI</p>
-                  <p className="font-mono text-[10px] text-cyber-accent-success tracking-widest">ONLINE • GEMINI POWERED</p>
+                  <p className="font-mono text-[10px] text-cyber-accent-success tracking-widest">ONLINE • GROK POWERED</p>
                 </div>
               </div>
               <button

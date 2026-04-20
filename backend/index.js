@@ -6,7 +6,8 @@ const cors = require('cors');
 const crypto = require('crypto');
 const { PrismaClient } = require('@prisma/client');
 const { analyzeRequest } = require('./detector');
-const { generateAIInsight, generateAIChatResponse } = require('./ai');
+const { sendTelegramAlert } = require('./services/telegramService');
+const { generateAIInsight, generateAIChatResponse, generateThreatReport } = require('./ai');
 const { geolocateIp } = require('./geolocate');
 
 const prisma = new PrismaClient();
@@ -103,6 +104,30 @@ dashboardApp.get('/api/attacks/login', async (req, res) => {
   res.json(attacks);
 });
 
+dashboardApp.get('/api/report', async (req, res) => {
+  try {
+    const stats = {
+      totalPayloads: await prisma.payload.count(),
+      activeSessions: await prisma.attackSession.count({ where: { endTime: null } }),
+      uniqueCountries: (await prisma.attackerProfile.findMany({ select: { country: true }, distinct: ['country'] })).length,
+      criticalCount: await prisma.payload.count({ where: { severity: 'Critical' } })
+    };
+    const attacks = await prisma.payload.findMany({
+      orderBy: { timestamp: 'desc' }, take: 20,
+      include: { session: { include: { attacker: true } } }
+    });
+    const sessions = await prisma.attackSession.findMany({
+      orderBy: { startTime: 'desc' }, take: 10,
+      include: { attacker: true, payloads: true }
+    });
+    const aiSummary = await generateThreatReport(stats, attacks, sessions);
+    res.json({ stats, attacks, sessions, aiSummary, generatedAt: new Date().toISOString() });
+  } catch (error) {
+    console.error('Report Error:', error.message);
+    res.status(500).json({ error: 'Failed to generate report' });
+  }
+});
+
 dashboardApp.post('/api/chat', async (req, res) => {
   try {
     const { messages } = req.body;
@@ -113,6 +138,100 @@ dashboardApp.post('/api/chat', async (req, res) => {
     res.json({ reply });
   } catch (error) {
     res.status(500).json({ error: 'Failed to generate chat response' });
+  }
+});
+
+// Payload Analyzer API - runs detection & sends Telegram alert
+dashboardApp.post('/api/analyze', async (req, res) => {
+  try {
+    const { payload } = req.body;
+    if (!payload || typeof payload !== 'string') {
+      return res.status(400).json({ error: 'Missing payload string' });
+    }
+
+    const analysis = analyzeRequest('analyzer', 'POST', '/analyzer', payload, '{}');
+
+    // ML Inference
+    let mlResult = { is_anomaly: false, anomaly_score: 0 };
+    try {
+      const mlRes = await fetch('http://127.0.0.1:5000/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entropy: analysis.entropy,
+          special_char_ratio: analysis.specialCharRatio,
+          keyword_freq: analysis.matchedRules.length,
+          encoding_depth: 1,
+          body_length: analysis.body_length
+        })
+      });
+      if (mlRes.ok) mlResult = await mlRes.json();
+    } catch (_) { /* ML service may be offline */ }
+
+    if (mlResult.is_anomaly) {
+      analysis.baseScore = Math.min(100, analysis.baseScore + mlResult.anomaly_score);
+      if (!analysis.matchedRules.includes('Anomaly Detected')) {
+        analysis.matchedRules.push('Anomaly Detected');
+      }
+      if (analysis.baseScore > 80) analysis.severity = 'Critical';
+      else if (analysis.baseScore > 60) analysis.severity = 'High';
+    }
+
+    // Determine detection type
+    let detectionType = 'Clean';
+    let layer = 'RULE ENGINE';
+    if (analysis.matchedRules.length > 0) {
+      detectionType = analysis.matchedRules.join(' / ').toUpperCase();
+    }
+    if (mlResult.is_anomaly) {
+      layer = 'ML + RULE ENGINE';
+    }
+
+    // Generate AI explanation
+    let explanation = '';
+    let recommendation = '';
+    if (analysis.isAttack) {
+      const gInsight = await generateAIInsight({
+        endpoint: '/analyzer',
+        method: 'POST',
+        body: payload,
+        matchedRules: analysis.matchedRules,
+        severity: analysis.severity
+      });
+      if (gInsight) {
+        explanation = gInsight.explanation || '';
+        recommendation = gInsight.recommendation || '';
+      }
+    }
+
+    // Send Telegram alert for detected threats
+    if (analysis.isAttack) {
+      await sendTelegramAlert({
+        type: 'Payload Analyzer: ' + (analysis.matchedRules.join(', ') || 'Suspicious'),
+        severity: analysis.severity,
+        ip: 'Dashboard User',
+        endpoint: '/analyzer',
+        payload: payload.substring(0, 500),
+        userAgent: 'Chakravyuh Dashboard',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    res.json({
+      clean: !analysis.isAttack,
+      type: detectionType,
+      layer,
+      score: analysis.baseScore,
+      severity: analysis.severity,
+      matchedRules: analysis.matchedRules,
+      explanation: explanation || `Analysis complete. ${analysis.isAttack ? 'Malicious patterns detected in the payload.' : 'No threats found.'}`,
+      recommendation: recommendation || '',
+      mlAnomaly: mlResult.is_anomaly,
+      entropy: analysis.entropy
+    });
+  } catch (error) {
+    console.error('Analyze API Error:', error.message);
+    res.status(500).json({ error: 'Analysis failed' });
   }
 });
 
@@ -159,7 +278,7 @@ async function getMLScore(features) {
 
 // Honeypot Middleware
 honeypotApp.use(async (req, res, next) => {
-  const ip = req.ip || req.connection.remoteAddress;
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || req.connection.remoteAddress;
   const method = req.method;
   const path = req.path;
   const bodyStr = JSON.stringify(req.body || {});
@@ -305,10 +424,27 @@ honeypotApp.use(async (req, res, next) => {
     aiInsightId = aiInsight ? aiInsight.id : null;
   }
   
-  // Telegram mock
-  if (analysis.severity === 'Critical') {
-     console.log(`[TELEGRAM MOCK] 🔴 CRITICAL THREAT DETECTED from ${profile.country}. IP: ${ip}. Rules: ${analysis.matchedRules.join(',')}`);
+  // --- TELEGRAM ALERT INTEGRATION ---
+  let alertSent = false;
+
+  // 1. Login route -> on brute force / SQL injection detection
+  if (surface === 'login' && analysis.matchedRules.length > 0) {
+      await sendTelegramAlert({ type: 'Login Attack: ' + analysis.matchedRules.join(', '), severity: analysis.severity, ip, endpoint: path, payload: bodyStr, userAgent, timestamp: new Date().toISOString() });
+      alertSent = true;
   }
+  
+  // 2. Payload analyzer -> when malicious pattern detected
+  if (!alertSent && analysis.matchedRules.length > 0) {
+      await sendTelegramAlert({ type: 'Malicious Payload: ' + analysis.matchedRules.join(', '), severity: analysis.severity, ip, endpoint: path, payload: bodyStr, userAgent, timestamp: new Date().toISOString() });
+      alertSent = true;
+  }
+
+  // 3. Global middleware -> suspicious requests
+  if (!alertSent && mlResult.is_anomaly) {
+      await sendTelegramAlert({ type: 'Suspicious API Request (Anomaly)', severity: analysis.severity, ip, endpoint: path, payload: bodyStr, userAgent, timestamp: new Date().toISOString() });
+      alertSent = true;
+  }
+  // ----------------------------------
 
   // Fetch full details to emit via socket
   const fullPayload = await prisma.payload.findUnique({

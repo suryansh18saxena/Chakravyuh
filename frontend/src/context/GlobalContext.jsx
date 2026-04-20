@@ -7,6 +7,41 @@ export const useGlobal = () => useContext(GlobalContext);
 
 const API_BASE = `http://${window.location.hostname}:3001`;
 
+// Cyberpunk alert beep using Web Audio API — no external files needed
+function playAlertSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // First beep — high pitch
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(880, ctx.currentTime);
+    osc1.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.15);
+    gain1.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+    osc1.connect(gain1).connect(ctx.destination);
+    osc1.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 0.15);
+
+    // Second beep — slightly delayed
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(660, ctx.currentTime + 0.18);
+    osc2.frequency.exponentialRampToValueAtTime(330, ctx.currentTime + 0.35);
+    gain2.gain.setValueAtTime(0.25, ctx.currentTime + 0.18);
+    gain2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+    osc2.connect(gain2).connect(ctx.destination);
+    osc2.start(ctx.currentTime + 0.18);
+    osc2.stop(ctx.currentTime + 0.35);
+
+    setTimeout(() => ctx.close(), 500);
+  } catch (e) {
+    // Silently fail if audio is not available
+  }
+}
+
 export function GlobalProvider({ children }) {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -40,10 +75,11 @@ export function GlobalProvider({ children }) {
         fetch(`${API_BASE}/api/stats`).then(r => r.json()).then(data => setGlobalStats(data)).catch(console.error);
     });
 
-    // Listen for new attacks and fire toasts
+    // Listen for new attacks and fire toasts + sound
     newSocket.on('new_attack', (payload) => {
         if (payload) {
             const attacker = payload.session?.attacker;
+            playAlertSound();
             addToast({
                 type: `${payload.severity} — ${payload.surface?.toUpperCase() || 'UNKNOWN'}`,
                 ip: `${attacker?.ip || 'Unknown IP'} • ${attacker?.country || 'Unknown'}`,

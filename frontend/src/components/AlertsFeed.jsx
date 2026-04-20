@@ -60,8 +60,8 @@ export default function AlertsFeed({ attacks }) {
                                     <span className="font-bold text-white uppercase text-[13px] truncate">{attack.surface} EXPL0IT</span>
                                     <span className="text-cyber-text-secondary text-sm">—</span>
                                     <span className="mono-data font-bold text-white flex items-center gap-2">
-                                      {attack.session.attacker.ip}
-                                      {attack.session.attacker.country === 'unknown' ? '🏴‍☠️' : '🌍'}
+                                      {attack.session?.attacker?.ip || 'Unknown'}
+                                      {attack.session?.attacker?.country === 'unknown' ? '🏴‍☠️' : '🌍'}
                                     </span>
                                 </div>
 

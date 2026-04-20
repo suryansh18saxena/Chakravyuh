@@ -8,30 +8,38 @@ export default function PayloadAnalyzer() {
     const [result, setResult] = useState(null);
     const [typedText, setTypedText] = useState('');
 
-    const handleAnalyze = () => {
+    const handleAnalyze = async () => {
         if (!payload.trim()) return;
         setStatus('analyzing');
         setTypedText('');
         setResult(null);
         
-        // Mocking an API call
-        setTimeout(() => {
-             const isClean = !payload.toLowerCase().includes('select') && !payload.toLowerCase().includes('<script>');
-             
-             const mockResult = isClean ? {
-                 clean: true
-             } : {
-                 clean: false,
-                 type: 'SQL INJECTION / XSS',
-                 layer: 'RULE ENGINE',
-                 score: 92,
-                 explanation: `The analyzed payload contains severe malicious patterns attempting to manipulate backend SQL query compilation.\n\nThe attacker is using tautology (OR 1=1) mechanisms combined with comment sequence closures to bypass authentication schemas.\n\nSecondary heuristics indicate an attempt to extract the configuration table.\n\nThis behavior matches known APT footprint signatures accessing unpatched entry nodes.`,
-                 recommendation: `// Immediate action required: parameterize queries\nconst query = 'SELECT * FROM users WHERE username = ? AND password = ?';\ndb.execute(query, [req.body.username, req.body.password]);`
-             };
-             
-             setResult(mockResult);
-             setStatus('complete');
-        }, 1500);
+        try {
+            const response = await fetch('http://localhost:3001/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payload })
+            });
+            
+            if (!response.ok) throw new Error('Analysis failed');
+            
+            const data = await response.json();
+            setResult(data);
+            setStatus('complete');
+        } catch (error) {
+            console.error('Analysis error:', error);
+            // Fallback to local detection if backend is unreachable
+            const isClean = !payload.toLowerCase().includes('select') && !payload.toLowerCase().includes('<script>');
+            setResult(isClean ? { clean: true } : {
+                clean: false,
+                type: 'SQL INJECTION / XSS',
+                layer: 'RULE ENGINE (offline)',
+                score: 85,
+                explanation: 'Backend unavailable. Local heuristic scan detected malicious patterns in the payload.',
+                recommendation: '// Parameterize all database queries to prevent injection attacks.'
+            });
+            setStatus('complete');
+        }
     };
 
     // Typewriter effect for the AI explanation

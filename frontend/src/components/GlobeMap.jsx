@@ -52,15 +52,25 @@ export default function GlobeMap({ attacks }) {
 
     const arcs = [];
     const rings = [];
+    const points = [];
 
     attacks.forEach(attack => {
        const attacker = attack.session?.attacker;
-       if (attacker && attacker.latitude && attacker.longitude) {
+       if (attacker && attacker.latitude != null && attacker.longitude != null && (attacker.latitude !== 0 || attacker.longitude !== 0)) {
            
            let color = 'rgba(67, 97, 238, 0.6)'; // Blue
            if (attack.severity === 'Critical') color = 'rgba(230, 57, 70, 0.9)'; // Red
            else if (attack.severity === 'High') color = 'rgba(244, 162, 97, 0.8)'; // Orange
            else if (attack.severity === 'Low') color = 'rgba(45, 198, 83, 0.5)'; // Green
+
+           // Red dot at attacker origin
+           points.push({
+               lat: attacker.latitude,
+               lng: attacker.longitude,
+               size: attack.severity === 'Critical' ? 0.8 : 0.5,
+               color: color,
+               label: `${attacker.ip} (${attacker.country})`
+           });
 
            if (showArcs) {
                arcs.push({
@@ -94,8 +104,14 @@ export default function GlobeMap({ attacks }) {
        }
     });
 
-    globeEl.current.arcsData(arcs);
-    globeEl.current.ringsData(rings);
+    globeEl.current
+      .arcsData(arcs)
+      .ringsData(rings)
+      .pointsData(points)
+      .pointAltitude('size')
+      .pointColor('color')
+      .pointRadius(0.4)
+      .pointLabel('label');
 
     // Controls
     globeEl.current.controls().autoRotate = autoRotate;
