@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Box, BrainCircuit, Globe, Activity, ShieldAlert, Clock } from 'lucide-react';
+import { ArrowRight, Box, BrainCircuit, Globe, Activity, ShieldAlert, Clock, Building2, Shield, Check } from 'lucide-react';
 import SpiderWebIcon from '../components/SpiderWebIcon';
 
 export default function LandingPage() {
@@ -117,6 +117,138 @@ export default function LandingPage() {
                     />
                 </div>
 
+                {/* ============================== */}
+                {/* SUBSCRIPTION / PRICING SECTION */}
+                {/* ============================== */}
+                <div className="w-full py-24 border-t border-cyber-border">
+                    <div className="text-center mb-16">
+                        <p className="font-mono text-[12px] text-cyber-accent-blue uppercase tracking-[0.3em] mb-3">Deployment Models</p>
+                        <h2 className="font-heading font-bold text-[42px] text-white leading-tight">Choose Your Shield</h2>
+                        <p className="font-sans text-cyber-text-secondary mt-3 max-w-xl mx-auto">From cloud-hosted SaaS to air-gapped classified environments. Chakravyuh adapts to your threat landscape.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+                        {/* TIER 1 — Company / SaaS */}
+                        <div className="relative bg-cyber-card border border-cyber-accent-success/40 rounded-2xl p-8 flex flex-col group hover:border-cyber-accent-success transition-colors overflow-hidden">
+                            {/* Popular Badge */}
+                            <div className="absolute top-5 right-5">
+                                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-cyber-accent-success/20 text-cyber-accent-success border border-cyber-accent-success/40">Most Popular</span>
+                            </div>
+                            {/* Glow */}
+                            <div className="absolute inset-0 bg-cyber-accent-success/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
+
+                            <div className="relative z-10 flex flex-col flex-1">
+                                <div className="w-12 h-12 rounded-xl bg-cyber-accent-success/10 border border-cyber-accent-success/30 flex items-center justify-center mb-6">
+                                    <Globe className="w-6 h-6 text-cyber-accent-success" />
+                                </div>
+
+                                <p className="font-mono text-[11px] text-cyber-accent-success uppercase tracking-[0.2em] mb-1">Model 1 — SaaS</p>
+                                <h3 className="font-heading font-bold text-[28px] text-white mb-3">For Company</h3>
+                                <p className="font-sans text-[14px] text-cyber-text-secondary leading-relaxed mb-8">
+                                    The simplest way to get started. Visit our platform, connect your infrastructure — everything runs on our secure cloud with zero setup required.
+                                </p>
+
+                                <div className="flex items-baseline gap-1 mb-8">
+                                    <span className="font-heading font-bold text-[48px] text-cyber-accent-success">Free</span>
+                                    <span className="text-cyber-text-secondary text-sm">/ to start</span>
+                                </div>
+
+                                <div className="flex flex-col gap-3 mb-10 flex-1">
+                                    <PricingFeature text="Instant access — no installation" />
+                                    <PricingFeature text="Cloud-hosted honeypot surfaces" />
+                                    <PricingFeature text="AI-powered threat analysis" />
+                                    <PricingFeature text="Dashboard & reports included" />
+                                    <PricingFeature text="Auto-updates & new detections" />
+                                </div>
+
+                                <button className="w-full btn btn-primary text-[15px] shadow-glow-red py-3">
+                                    Start Scanning Free →
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* TIER 2 — Enterprise / On-Premise */}
+                        <div className="relative bg-cyber-card border border-cyber-border rounded-2xl p-8 flex flex-col group hover:border-cyber-accent-blue transition-colors overflow-hidden">
+                            <div className="absolute inset-0 bg-cyber-accent-blue/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
+
+                            <div className="relative z-10 flex flex-col flex-1">
+                                <div className="w-12 h-12 rounded-xl bg-cyber-accent-blue/10 border border-cyber-accent-blue/30 flex items-center justify-center mb-6">
+                                    <Building2 className="w-6 h-6 text-cyber-accent-blue" />
+                                </div>
+
+                                <p className="font-mono text-[11px] text-cyber-accent-blue uppercase tracking-[0.2em] mb-1">Model 2 — On-Premise</p>
+                                <h3 className="font-heading font-bold text-[28px] text-white mb-3">For Enterprises</h3>
+                                <p className="font-sans text-[14px] text-cyber-text-secondary leading-relaxed mb-8">
+                                    Download and deploy Chakravyuh entirely within your own infrastructure. Runs inside your firewall — your data never leaves your network.
+                                </p>
+
+                                <div className="flex items-baseline gap-2 mb-2">
+                                    <span className="font-heading font-bold text-[48px] text-cyber-accent-blue">$9</span>
+                                    <span className="text-cyber-text-secondary text-sm">/ month</span>
+                                </div>
+                                <div className="mb-8">
+                                    <span className="text-cyber-text-secondary text-[11px]">per organization</span>
+                                    <span className="ml-3 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-cyber-elevated border border-cyber-border text-cyber-text-secondary">Billed Monthly</span>
+                                </div>
+
+                                <div className="flex flex-col gap-3 mb-10 flex-1">
+                                    <PricingFeature text="Deployed on your own servers" />
+                                    <PricingFeature text="Runs inside your firewall" />
+                                    <PricingFeature text="You never share data externally" />
+                                    <PricingFeature text="Full audit log & SIEM integration" />
+                                    <PricingFeature text="Enterprise SLA & priority support" />
+                                </div>
+
+                                <button className="w-full btn btn-secondary text-[15px] py-3">
+                                    Get Enterprise Plan — $9/mo →
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* TIER 3 — Government / Air-Gapped */}
+                        <div className="relative bg-cyber-card border border-cyber-accent-warning/30 rounded-2xl p-8 flex flex-col group hover:border-cyber-accent-warning transition-colors overflow-hidden">
+                            {/* Air-Gapped Badge */}
+                            <div className="absolute top-5 right-5">
+                                <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest bg-cyber-accent-warning/15 text-cyber-accent-warning border border-cyber-accent-warning/40">Air-Gapped</span>
+                            </div>
+                            <div className="absolute inset-0 bg-cyber-accent-warning/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl" />
+
+                            <div className="relative z-10 flex flex-col flex-1">
+                                <div className="w-12 h-12 rounded-xl bg-cyber-accent-warning/10 border border-cyber-accent-warning/30 flex items-center justify-center mb-6">
+                                    <Shield className="w-6 h-6 text-cyber-accent-warning" />
+                                </div>
+
+                                <p className="font-mono text-[11px] text-cyber-accent-warning uppercase tracking-[0.2em] mb-1">Model 3 — Air-Gapped</p>
+                                <h3 className="font-heading font-bold text-[28px] text-white mb-3">For Government / Defense</h3>
+                                <p className="font-sans text-[14px] text-cyber-text-secondary leading-relaxed mb-8">
+                                    Maximum isolation for classified environments. Runs on a completely isolated network with zero internet connectivity. No phone-home, no telemetry — ever.
+                                </p>
+
+                                <div className="flex items-baseline gap-2 mb-2">
+                                    <span className="font-heading font-bold text-[48px] text-cyber-accent-warning">$99</span>
+                                    <span className="text-cyber-text-secondary text-sm">/ month</span>
+                                </div>
+                                <div className="mb-8">
+                                    <span className="text-cyber-text-secondary text-[11px]">per deployment</span>
+                                    <span className="ml-3 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-cyber-accent-warning/10 border border-cyber-accent-warning/30 text-cyber-accent-warning">Air Gapped</span>
+                                </div>
+
+                                <div className="flex flex-col gap-3 mb-10 flex-1">
+                                    <PricingFeature text="Zero internet connection required" color="warning" />
+                                    <PricingFeature text="Completely isolated network deployment" color="warning" />
+                                    <PricingFeature text="No telemetry or phone-home" color="warning" />
+                                    <PricingFeature text="Offline license verification" color="warning" />
+                                    <PricingFeature text="FISMA / NIST 800-53 aligned" color="warning" />
+                                </div>
+
+                                <button className="w-full py-3 rounded-lg text-[15px] font-semibold bg-cyber-accent-warning/10 border border-cyber-accent-warning/40 text-cyber-accent-warning hover:bg-cyber-accent-warning/20 transition-colors cursor-pointer flex items-center justify-center gap-2">
+                                    Request Deployment — $99/mo →
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     );
@@ -149,6 +281,19 @@ function FeatureCard({ title, desc, accent, icon: Icon }) {
             </div>
             <h3 className="font-heading font-bold text-[18px] text-white mb-2 pl-2 z-10">{title}</h3>
             <p className="font-sans text-[14px] text-cyber-text-secondary leading-relaxed pl-2 z-10">{desc}</p>
+        </div>
+    );
+}
+
+function PricingFeature({ text, color = "success" }) {
+    const colorMap = {
+        success: "text-cyber-accent-success",
+        warning: "text-cyber-accent-warning"
+    };
+    return (
+        <div className="flex items-start gap-3">
+            <Check className={`w-4 h-4 mt-0.5 shrink-0 ${colorMap[color]}`} />
+            <span className="font-sans text-[13px] text-cyber-text-secondary">{text}</span>
         </div>
     );
 }
