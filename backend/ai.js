@@ -1,5 +1,6 @@
 // ai.js — Uses x.ai Grok API
 const { OpenAI } = require('openai');
+require('dotenv').config({ path: require('path').resolve(__dirname, '..', '.env') });
 
 const openai = new OpenAI({
   apiKey: process.env.XAI_API_KEY || "",

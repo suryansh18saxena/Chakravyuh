@@ -1,7 +1,8 @@
 const axios = require('axios');
+require('dotenv').config({ path: require('path').resolve(__dirname, '..', '.env') });
 
-const BOT_TOKEN = "8603629820:AAHKA30VYcvB1uvuR0Sh_p4ooTCBG8agUxo";
-const CHAT_ID = "2090927242";
+const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || "";
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID || "";
 const TELEGRAM_API_URL = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
 
 // Basic rate limiting setup
